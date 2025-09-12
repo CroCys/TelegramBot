@@ -1,0 +1,35 @@
+version: "3.9"
+services:
+  db:
+    container_name: TelegramBotDB
+    image: bitnami/postgresql:17.6.0
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/bitnami/postgresql
+    restart: unless-stopped
+
+  bot:
+    container_name: TelegramBot
+    build: .
+    depends_on:
+      - db
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_FIRST_ADMIN_ID: ${TELEGRAM_FIRST_ADMIN_ID}
+      TELEGRAM_SECOND_ADMIN_ID: ${TELEGRAM_SECOND_ADMIN_ID}
+    ports:
+      - "${APP_PORT}:8080"
+    restart: unless-stopped
+
+volumes:
+  db_data:

@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  db:
+    container_name: TelegramBotDB
+    image: bitnami/postgresql:17.6.0
+    environment:
+      POSTGRES_DB: botdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
