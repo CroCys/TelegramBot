@@ -1,5 +1,6 @@
 package com.vadim.telegrambot.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,20 +21,12 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Transactional
-    public User findOrCreate(Long telegramId,
-            String username,
-            String firstName,
-            String lastName) {
+    public User findOrCreate(Long telegramId, String username, String firstName, String lastName) {
         Optional<User> opt = userRepository.findByTelegramId(telegramId);
         if (opt.isPresent()) {
             return opt.get();
         }
-        User user = User.builder()
-                .telegramId(telegramId)
-                .username("@" + username)
-                .firstName(firstName)
-                .lastName(lastName)
-                .build();
+        User user = User.builder().telegramId(telegramId).username("@" + username).firstName(firstName).lastName(lastName).build();
         return userRepository.save(user);
     }
 
@@ -68,8 +61,7 @@ public class UserService {
 
     @Transactional
     public Set<Subscription> getSubscriptions(Long telegramId) {
-        User user = userRepository.findByTelegramId(telegramId)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + telegramId));
+        User user = userRepository.findByTelegramId(telegramId).orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + telegramId));
         return user.getSubscriptions();
     }
 }

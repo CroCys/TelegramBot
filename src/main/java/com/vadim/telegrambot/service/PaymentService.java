@@ -4,6 +4,7 @@ import com.vadim.telegrambot.model.Payment;
 import com.vadim.telegrambot.model.Subscription;
 import com.vadim.telegrambot.model.User;
 import com.vadim.telegrambot.repository.PaymentRepository;
+import com.vadim.telegrambot.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.List;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public Payment findByIdWithRelations(Long paymentId) {
@@ -38,6 +40,25 @@ public class PaymentService {
                 .build();
 
         paymentRepository.save(payment);
+    }
+
+    @Transactional
+    public void generatePaymentsForCurrentMonth() {
+        List<User> users = userRepository.findAll();
+
+        for (User user : users) {
+            for (Subscription subscription : user.getSubscriptions()) {
+                Payment payment = Payment.builder()
+                        .user(user)
+                        .subscription(subscription)
+                        .month(LocalDateTime.now().getMonth())
+                        .year(LocalDateTime.now().getYear())
+                        .isPayed(false)
+                        .build();
+
+                paymentRepository.save(payment);
+            }
+        }
     }
 
     @Transactional

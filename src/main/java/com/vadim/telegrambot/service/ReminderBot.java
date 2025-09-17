@@ -95,10 +95,10 @@ public class ReminderBot extends TelegramLongPollingBot {
     }
 
     private void sendTemplateList(long chatId) {
-        List<Subscription> templates = subscriptionService.listAllTemplates();
+        List<Subscription> subs = subscriptionService.listAllSubscriptions();
 
         InlineKeyboardMarkup ikm = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = templates.stream().map(t -> List.of(InlineKeyboardButton.builder().text(t.getName() + " | " + t.getPrice() + "₽" + " | " + "Дата оплаты " + t.getDayOfMonth() + "-го").callbackData("SUB_" + t.getId()).build())).toList();
+        List<List<InlineKeyboardButton>> rows = subs.stream().map(t -> List.of(InlineKeyboardButton.builder().text(t.getName() + " | " + t.getPrice() + "₽" + " | " + "Дата оплаты " + t.getDayOfMonth() + "-го").callbackData("SUB_" + t.getId()).build())).toList();
         ikm.setKeyboard(rows);
 
         SendMessage msg = SendMessage.builder().chatId(String.valueOf(chatId)).text("📜 Выберите подписку из списка ниже:").replyMarkup(ikm).build();
@@ -180,7 +180,6 @@ public class ReminderBot extends TelegramLongPollingBot {
                                 + payment.getUser().getFirstName() + " " + payment.getUser().getUsername())
                         .build());
 
-                // --- Шаблонное сообщение пользователю ---
                 String messageToUser = String.format(
                         "Привет, %s! Оплата за подписку \"%s\" за %s была успешно зафиксирована. Спасибо!",
                         payment.getUser().getFirstName(),
@@ -189,7 +188,7 @@ public class ReminderBot extends TelegramLongPollingBot {
                 );
 
                 executeSafe(SendMessage.builder()
-                        .chatId(String.valueOf(payment.getUser().getTelegramId())) // id пользователя
+                        .chatId(String.valueOf(payment.getUser().getTelegramId()))
                         .text(messageToUser)
                         .build());
             }

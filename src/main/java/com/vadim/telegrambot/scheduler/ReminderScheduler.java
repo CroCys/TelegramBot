@@ -2,10 +2,11 @@ package com.vadim.telegrambot.scheduler;
 
 import java.time.LocalDate;
 
+import com.vadim.telegrambot.service.PaymentService;
+import com.vadim.telegrambot.service.SubscriptionService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import com.vadim.telegrambot.model.Subscription;
-import com.vadim.telegrambot.repository.SubscriptionRepository;
 import com.vadim.telegrambot.service.ReminderBot;
 import lombok.RequiredArgsConstructor;
 
@@ -13,31 +14,37 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReminderScheduler {
 
-    private final SubscriptionRepository subscriptionRepository;
+    private final SubscriptionService subscriptionService;
+    private final PaymentService paymentService;
     private final ReminderBot bot;
 
     @Scheduled(cron = "0 0 8 * * *")
     public void sendReminders() {
         LocalDate today = LocalDate.now();
-        for (Subscription tpl : subscriptionRepository.findAll()) {
+        for (Subscription subscription : subscriptionService.listAllSubscriptions()) {
 
-            LocalDate due = today.withDayOfMonth(tpl.getDayOfMonth());
+            LocalDate due = today.withDayOfMonth(subscription.getDayOfMonth());
             if (today.isAfter(due)) {
                 due = due.plusMonths(1);
             }
 
-            String textTomorrow = "Завтра оплата «" + tpl.getName() + "» — " + tpl.getPrice() + " ₽";
-            String textToday = "Сегодня оплата «" + tpl.getName() + "» — " + tpl.getPrice() + " ₽";
+            String textTomorrow = "Завтра оплата «" + subscription.getName() + "» — " + subscription.getPrice() + " ₽";
+            String textToday = "Сегодня оплата «" + subscription.getName() + "» — " + subscription.getPrice() + " ₽";
 
             if (today.equals(due.minusDays(1))) {
-                broadcast(tpl, textTomorrow);
+                broadcast(subscription, textTomorrow);
             } else if (today.equals(due)) {
-                broadcast(tpl, textToday);
+                broadcast(subscription, textToday);
             }
         }
     }
 
-    private void broadcast(Subscription tpl, String text) {
-        tpl.getUsers().forEach(user -> bot.sendText(user.getTelegramId(), text));
+    @Scheduled(cron = "0 5 0 1 * *")
+    public void scheduleMonthlyPayments() {
+        paymentService.generatePaymentsForCurrentMonth();
+    }
+
+    private void broadcast(Subscription subscription, String text) {
+        subscription.getUsers().forEach(user -> bot.sendText(user.getTelegramId(), text));
     }
 }

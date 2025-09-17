@@ -1,7 +1,6 @@
 package com.vadim.telegrambot.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -22,13 +21,13 @@ public class SubscriptionService {
     private final PaymentService paymentService;
 
     @Transactional
-    public List<Subscription> listAllTemplates() {
+    public List<Subscription> listAllSubscriptions() {
         return subscriptionRepository.findAll();
     }
 
     @Transactional
     public boolean subscribe(User user, Long subscriptionId) {
-        Subscription subscription = subscriptionRepository.findById(subscriptionId).orElseThrow(() -> new IllegalArgumentException("Шаблон не найден: " + subscriptionId));
+        Subscription subscription = subscriptionRepository.findById(subscriptionId).orElseThrow(() -> new IllegalArgumentException("Подписка не найдена: " + subscriptionId));
         boolean added = user.getSubscriptions().add(subscription);
         if (added) {
             userRepository.save(user);
@@ -39,7 +38,7 @@ public class SubscriptionService {
 
     @Transactional
     public boolean unsubscribe(User user, Long subscriptionId) {
-        Subscription subscription = subscriptionRepository.findById(subscriptionId).orElseThrow(() -> new IllegalArgumentException("Шаблон не найден: " + subscriptionId));
+        Subscription subscription = subscriptionRepository.findById(subscriptionId).orElseThrow(() -> new IllegalArgumentException("Подписка не найдена: " + subscriptionId));
         boolean removed = user.getSubscriptions().remove(subscription);
         if (removed) {
             userRepository.save(user);
