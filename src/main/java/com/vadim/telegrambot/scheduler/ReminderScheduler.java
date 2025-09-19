@@ -1,12 +1,13 @@
 package com.vadim.telegrambot.scheduler;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import com.vadim.telegrambot.model.Payment;
 import com.vadim.telegrambot.service.PaymentService;
-import com.vadim.telegrambot.service.SubscriptionService;
+import jakarta.transaction.Transactional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import com.vadim.telegrambot.model.Subscription;
 import com.vadim.telegrambot.service.ReminderBot;
 import lombok.RequiredArgsConstructor;
 
@@ -14,37 +15,36 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReminderScheduler {
 
-    private final SubscriptionService subscriptionService;
     private final PaymentService paymentService;
     private final ReminderBot bot;
 
-    @Scheduled(cron = "0 0 8 * * *")
+    @Transactional
+    @Scheduled(cron = "0 0 8 * * *", zone = "Europe/Moscow")
     public void sendReminders() {
         LocalDate today = LocalDate.now();
-        for (Subscription subscription : subscriptionService.listAllSubscriptions()) {
 
-            LocalDate due = today.withDayOfMonth(subscription.getDayOfMonth());
-            if (today.isAfter(due)) {
-                due = due.plusMonths(1);
-            }
+        List<Payment> payments = paymentService.findAllDebtors();
 
-            String textTomorrow = "Завтра оплата «" + subscription.getName() + "» — " + subscription.getPrice() + " ₽";
-            String textToday = "Сегодня оплата «" + subscription.getName() + "» — " + subscription.getPrice() + " ₽";
+        for (Payment payment : payments) {
+            LocalDate due = LocalDate.of(payment.getYear(), payment.getMonth(), payment.getSubscription().getDayOfMonth());
 
             if (today.equals(due.minusDays(1))) {
-                broadcast(subscription, textTomorrow);
+                send(payment, "Привет " + payment.getUser().getFirstName() + "! Напоминаю: завтра оплата «%s» — %s ₽");
             } else if (today.equals(due)) {
-                broadcast(subscription, textToday);
+                send(payment, "Привет " + payment.getUser().getFirstName() + "! Напоминаю: сегодня оплата «%s» — %s ₽");
+            } else if (today.isAfter(due)) {
+                send(payment, "Привет " + payment.getUser().getFirstName() + "! Напоминаю: просрочен платеж «%s» — %s ₽. Оплати пожалуйста \uD83E\uDD72");
             }
         }
     }
 
-    @Scheduled(cron = "0 5 0 1 * *")
-    public void scheduleMonthlyPayments() {
-        paymentService.generatePaymentsForCurrentMonth();
+    private void send(Payment payment, String template) {
+        String text = String.format(template, payment.getSubscription().getName(), payment.getSubscription().getPrice());
+        bot.sendText(payment.getUser().getTelegramId(), text);
     }
 
-    private void broadcast(Subscription subscription, String text) {
-        subscription.getUsers().forEach(user -> bot.sendText(user.getTelegramId(), text));
+    @Scheduled(cron = "0 5 0 1 * *")
+    void scheduleMonthlyPayments() {
+        paymentService.generatePaymentsForCurrentMonth();
     }
 }

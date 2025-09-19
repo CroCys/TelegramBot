@@ -20,7 +20,7 @@ public class TemplateInitializer {
             repo.save(Subscription.builder()
                     .name("VPN")
                     .price(100)
-                    .dayOfMonth(21)
+                    .dayOfMonth(19)
                     .build());
             repo.save(Subscription.builder()
                     .name("Apple")

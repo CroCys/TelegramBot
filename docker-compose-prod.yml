@@ -1,7 +1,7 @@
 services:
   db:
     container_name: TelegramBotDB
-    image: bitnami/postgresql:17.6.0
+    image: postgres:17.6
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/bitnami/postgresql
+      - db_data:/postgresql
     restart: unless-stopped
 
   bot:
