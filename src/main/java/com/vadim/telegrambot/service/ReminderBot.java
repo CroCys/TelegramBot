@@ -57,7 +57,6 @@ public class ReminderBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        log.info("Получен апдейт: {}", update);
         userService.updateUser(update);
         if (update.hasMessage() && update.getMessage().hasText()) {
             handleText(update.getMessage());

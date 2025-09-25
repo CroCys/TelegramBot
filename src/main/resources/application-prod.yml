@@ -10,6 +10,20 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  task:
+    scheduling:
+      enabled: true
+      pool:
+        size: 3
+      thread-name-prefix: "scheduler-"
+    execution:
+      enabled: true
+      pool:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+      thread-name-prefix: "async-"
+
 server:
   port: ${APP_PORT:8080}
 
